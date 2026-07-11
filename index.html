@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TikDown Pro - TikTok Video & MP3 Downloader</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Google Fonts (Inter) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons Script -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #0a0a0a;
+    }
+    /* Sembunyikan scrollbar bawaan */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="text-zinc-100 flex flex-col items-center py-8 px-4 sm:px-6 select-none font-sans overflow-x-hidden relative min-h-screen">
+
+  <!-- Efek Gradient Background -->
+  <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[350px] bg-gradient-to-b from-purple-900/10 via-blue-900/5 to-transparent pointer-events-none blur-3xl rounded-full"></div>
+  <div class="absolute top-[20%] left-[10%] w-[150px] h-[150px] bg-purple-600/5 pointer-events-none blur-3xl rounded-full"></div>
+  <div class="absolute top-[40%] right-[10%] w-[180px] h-[180px] bg-blue-600/5 pointer-events-none blur-3xl rounded-full"></div>
+
+  <div class="w-full max-w-[500px] flex flex-col z-10 relative">
+    
+    <!-- Judul & Header -->
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center gap-2.5 px-3 py-1 rounded-full bg-purple-900/30 border border-purple-500/20 text-purple-400 text-xs font-semibold tracking-wider mb-3">
+        <span class="flex h-2 w-2 relative">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
+        </span>
+        TIKDOWN V2 READY
+      </div>
+      <h1 class="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent drop-shadow-sm">
+        🚀 TikDown Pro
+      </h1>
+      <p class="text-sm text-zinc-400 mt-1.5">
+        Download Video TikTok Tanpa Watermark & Mp3 Audio Gratis
+      </p>
+    </div>
+
+    <!-- Input Form -->
+    <div class="bg-zinc-900/95 border border-zinc-800/80 rounded-2xl p-5 shadow-[0_0_50px_-12px_rgba(124,58,237,0.15)] backdrop-blur-md mb-6">
+      <div class="space-y-4">
+        <div class="relative">
+          <input
+            id="url-input"
+            type="text"
+            placeholder="Tempel tautan video TikTok di sini..."
+            class="w-full bg-zinc-950/80 border border-zinc-800 text-zinc-100 placeholder-zinc-500 rounded-xl py-3.5 pl-4 pr-24 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all"
+          />
+          <div class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+            <button
+              id="btn-clear"
+              onclick="clearInput()"
+              class="hidden p-1 rounded-lg text-zinc-500 hover:text-zinc-300 transition-colors"
+            >
+              <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+            <button
+              onclick="pasteFromClipboard()"
+              class="bg-zinc-800/80 hover:bg-zinc-800 text-zinc-300 font-medium text-xs px-3 py-1.5 rounded-lg border border-zinc-700/60 active:scale-95 transition-all flex items-center gap-1"
+            >
+              <i data-lucide="clipboard" class="w-3.5 h-3.5"></i>
+              Paste
+            </button>
+          </div>
+        </div>
+
+        <!-- Box Pesan Error -->
+        <div id="error-box" class="hidden p-3 rounded-lg bg-red-950/40 border border-red-500/30 text-red-400 text-xs flex items-start gap-2">
+          <i data-lucide="info" class="w-4 h-4 shrink-0 mt-0.5"></i>
+          <span id="error-message"></span>
+        </div>
+
+        <!-- Tombol Download -->
+        <button
+          id="btn-submit"
+          onclick="handleDownload()"
+          class="w-full relative overflow-hidden group py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-semibold text-sm tracking-wide shadow-lg shadow-purple-600/20 active:scale-[0.99] transition-all"
+        >
+          <div class="flex items-center justify-center gap-2">
+            <i id="btn-icon" data-lucide="download" class="w-4 h-4"></i>
+            <span id="btn-text">DOWNLOAD SEKARANG</span>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Animasi Loading -->
+    <div id="loading-box" class="hidden mb-6 overflow-hidden">
+      <div class="bg-zinc-900 border border-purple-900/30 rounded-2xl p-5 text-center space-y-4">
+        <div class="relative w-14 h-14 mx-auto flex items-center justify-center">
+          <div class="absolute inset-0 rounded-full border-4 border-purple-500/10"></div>
+          <div class="absolute inset-0 rounded-full border-4 border-purple-500 border-t-transparent animate-spin"></div>
+          <i data-lucide="file-video" class="w-6 h-6 text-purple-400 animate-pulse"></i>
+        </div>
+        <div class="space-y-1.5">
+          <p class="text-sm font-semibold text-zinc-100">Sedang Memproses Tautan</p>
+          <p id="loading-step-text" class="text-xs text-zinc-400 max-w-[300px] mx-auto min-h-[32px] flex items-center justify-center">
+            Menghubungkan ke server pengunduh...
+          </p>
+        </div>
+        <!-- Progress Bar -->
+        <div class="w-full h-1.5 bg-zinc-950 rounded-full overflow-hidden">
+          <div id="loading-progress" class="h-full bg-gradient-to-r from-purple-500 to-blue-500 transition-all duration-1000" style="width: 10%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Box Tampilan Hasil Download -->
+    <div id="result-box" class="hidden bg-zinc-900 border border-zinc-800 rounded-2xl p-5 space-y-5 shadow-2xl mb-6">
+      <div class="flex gap-4">
+        <div class="relative w-24 h-32 bg-zinc-950 rounded-xl overflow-hidden shrink-0 border border-zinc-800 group shadow-lg">
+          <img
+            id="result-thumbnail"
+            src=""
+            alt="Video Thumbnail"
+            referrerpolicy="no-referrer"
+            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          />
+          <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
+            <i data-lucide="play" class="w-5 h-5 text-white drop-shadow-md"></i>
+          </div>
+          <span id="result-duration" class="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 text-[10px] font-semibold bg-black/75 rounded text-zinc-300"></span>
+        </div>
+
+        <div class="flex flex-col justify-between py-1 overflow-hidden">
+          <div class="space-y-1">
+            <div class="flex items-center gap-1">
+              <span id="result-author" class="text-xs font-semibold text-purple-400 bg-purple-950/50 border border-purple-900/40 px-2 py-0.5 rounded-full">
+              </span>
+            </div>
+            <p id="result-title" class="text-sm font-medium text-zinc-100 line-clamp-3 leading-relaxed">
+            </p>
+          </div>
+
+          <div class="flex items-center gap-1.5">
+            <button
+              id="btn-copy-caption"
+              class="inline-flex items-center gap-1 text-[11px] font-medium text-zinc-400 hover:text-zinc-200 bg-zinc-800/50 px-2 py-1 rounded border border-zinc-700/40 transition-colors"
+            >
+              <i data-lucide="copy" class="w-3 h-3"></i>
+              <span id="copy-caption-text">Salin Caption</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tombol Aksi Unduhan -->
+      <div class="space-y-2.5 pt-2 border-t border-zinc-800/80">
+        <!-- Video -->
+        <div class="grid grid-cols-5 gap-2">
+          <a
+            id="video-download-btn"
+            href="#"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="col-span-4 flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-sm font-bold py-3 px-4 rounded-xl shadow-md transition-all active:scale-[0.99]"
+          >
+            <i data-lucide="video" class="w-4 h-4"></i>
+            <span>UNDUH VIDEO HD (NO WM)</span>
+          </a>
+          <button
+            id="btn-copy-video"
+            class="col-span-1 flex items-center justify-center bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl border border-zinc-700/60 transition-colors"
+          >
+            <i id="copy-video-icon" data-lucide="copy" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <!-- Audio -->
+        <div id="audio-container" class="grid grid-cols-5 gap-2">
+          <a
+            id="audio-download-btn"
+            href="#"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="col-span-4 flex items-center justify-center gap-2 bg-zinc-800 hover:bg-zinc-700/90 text-zinc-200 text-sm font-semibold py-3 px-4 rounded-xl border border-zinc-700 transition-colors active:scale-[0.99]"
+          >
+            <i data-lucide="music" class="w-4 h-4 text-blue-400"></i>
+            <span>UNDUH AUDIO MP3</span>
+          </a>
+          <button
+            id="btn-copy-audio"
+            class="col-span-1 flex items-center justify-center bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl border border-zinc-700/60 transition-colors"
+          >
+            <i id="copy-audio-icon" data-lucide="copy" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Riwayat Unduhan -->
+    <div class="bg-zinc-900/75 border border-zinc-800/80 rounded-2xl p-5 shadow-lg backdrop-blur-md mb-6">
+      <div class="flex items-center justify-between mb-4 pb-2 border-b border-zinc-800/60">
+        <div class="flex items-center gap-2 text-zinc-300">
+          <i data-lucide="history" class="w-4 h-4 text-purple-400"></i>
+          <h2 class="text-sm font-bold uppercase tracking-wider">Riwayat Unduhan</h2>
+        </div>
+        <button
+          id="btn-clear-history"
+          onclick="clearAllHistory()"
+          class="hidden text-xs text-red-400 hover:text-red-300 transition-colors flex items-center gap-1 font-medium"
+        >
+          <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+          Hapus Semua
+        </button>
+      </div>
+
+      <div id="history-container" class="max-h-[280px] overflow-y-auto space-y-2.5 pr-1 no-scrollbar">
+        <!-- Akan diisi otomatis oleh JavaScript -->
+      </div>
+    </div>
+
+    <!-- Petunjuk FAQ Accordion -->
+    <div class="bg-zinc-900/50 border border-zinc-800/60 rounded-2xl p-5 mb-8">
+      <div class="flex items-center gap-2 text-zinc-300 mb-4 pb-2 border-b border-zinc-800/30">
+        <i data-lucide="help-circle" class="w-4 h-4 text-purple-400"></i>
+        <h2 class="text-sm font-bold uppercase tracking-wider">Petunjuk & FAQ</h2>
+      </div>
+
+      <div class="space-y-2.5">
+        <!-- FAQ 1 -->
+        <div class="border-b border-zinc-800/40 last:border-0 pb-2.5 last:pb-0">
+          <button
+            onclick="toggleFaq(0)"
+            class="w-full flex items-center justify-between text-left text-xs font-semibold text-zinc-300 hover:text-zinc-100 py-1.5 focus:outline-none"
+          >
+            <span>Bagaimana cara menyalin link video TikTok?</span>
+            <i id="faq-icon-0" data-lucide="chevron-down" class="w-4 h-4 text-zinc-500 transition-transform"></i>
+          </button>
+          <div id="faq-content-0" class="hidden overflow-hidden transition-all duration-300">
+            <p class="text-[11px] text-zinc-400 mt-1 leading-relaxed pl-1">
+              Buka aplikasi TikTok, pilih video yang ingin Anda unduh, klik tombol 'Bagikan' (Share) di sebelah kanan bawah, lalu pilih opsi 'Salin Tautan' (Copy Link).
+            </p>
+          </div>
+        </div>
+
+        <!-- FAQ 2 -->
+        <div class="border-b border-zinc-800/40 last:border-0 pb-2.5 last:pb-0">
+          <button
+            onclick="toggleFaq(1)"
+            class="w-full flex items-center justify-between text-left text-xs font-semibold text-zinc-300 hover:text-zinc-100 py-1.5 focus:outline-none"
+          >
+            <span>Apakah video hasil unduhan ada watermark-nya?</span>
+            <i id="faq-icon-1" data-lucide="chevron-down" class="w-4 h-4 text-zinc-500 transition-transform"></i>
+          </button>
+          <div id="faq-content-1" class="hidden overflow-hidden transition-all duration-300">
+            <p class="text-[11px] text-zinc-400 mt-1 leading-relaxed pl-1">
+              Tidak. TikDown Pro mengunduh video langsung dari server TikTok dengan kualitas asli dan sepenuhnya bersih dari watermark logo TikTok maupun nama pengguna creator.
+            </p>
+          </div>
+        </div>
+
+        <!-- FAQ 3 -->
+        <div class="border-b border-zinc-800/40 last:border-0 pb-2.5 last:pb-0">
+          <button
+            onclick="toggleFaq(2)"
+            class="w-full flex items-center justify-between text-left text-xs font-semibold text-zinc-300 hover:text-zinc-100 py-1.5 focus:outline-none"
+          >
+            <span>Apakah ada batasan jumlah unduhan video?</span>
+            <i id="faq-icon-2" data-lucide="chevron-down" class="w-4 h-4 text-zinc-500 transition-transform"></i>
+          </button>
+          <div id="faq-content-2" class="hidden overflow-hidden transition-all duration-300">
+            <p class="text-[11px] text-zinc-400 mt-1 leading-relaxed pl-1">
+              Sama sekali tidak ada batasan. Anda dapat mengunduh video dan musik audio MP3 sebanyak yang Anda inginkan secara gratis tanpa registrasi.
+            </p>
+          </div>
+        </div>
+
+        <!-- FAQ 4 -->
+        <div class="border-b border-zinc-800/40 last:border-0 pb-2.5 last:pb-0">
+          <button
+            onclick="toggleFaq(3)"
+            class="w-full flex items-center justify-between text-left text-xs font-semibold text-zinc-300 hover:text-zinc-100 py-1.5 focus:outline-none"
+          >
+            <span>Kenapa unduhan video saya gagal?</span>
+            <i id="faq-icon-3" data-lucide="chevron-down" class="w-4 h-4 text-zinc-500 transition-transform"></i>
+          </button>
+          <div id="faq-content-3" class="hidden overflow-hidden transition-all duration-300">
+            <p class="text-[11px] text-zinc-400 mt-1 leading-relaxed pl-1">
+              Kegagalan biasanya disebabkan oleh video yang di-private oleh pembuatnya, video telah dihapus, atau server publik TikTok sedang mengalami gangguan. Silakan coba kembali dengan link video lainnya.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer Credit -->
+    <footer class="text-center py-2 text-zinc-600 text-xs space-y-1.5">
+      <p class="font-semibold tracking-wider text-zinc-500">senzyy@lstc</p>
+      <p class="text-[10px] text-zinc-700">TikDown Pro Standalone • Simpan File Ini Untuk Digunakan Kapan Saja</p>
+    </footer>
+  </div>
+
+  <script>
+    // State Aplikasi
+    let isLoading = false;
+    let loadingStep = 0;
+    let loadingInterval;
+    let currentResult = null;
+    let history = [];
+
+    const loadingSteps = [
+      "Menghubungkan ke server pengunduh...",
+      "Mengekstrak informasi media TikTok...",
+      "Menyiapkan tautan video tanpa watermark HD...",
+      "Menghasilkan tautan audio MP3..."
+    ];
+
+    // Buat ikon Lucide
+    lucide.createIcons();
+
+    // DOM Elements
+    const urlInput = document.getElementById("url-input");
+    const btnClear = document.getElementById("btn-clear");
+    const errorBox = document.getElementById("error-box");
+    const errorMessage = document.getElementById("error-message");
+    const btnSubmit = document.getElementById("btn-submit");
+    const btnIcon = document.getElementById("btn-icon");
+    const btnText = document.getElementById("btn-text");
+    const loadingBox = document.getElementById("loading-box");
+    const loadingStepText = document.getElementById("loading-step-text");
+    const loadingProgress = document.getElementById("loading-progress");
+    const resultBox = document.getElementById("result-box");
+    const resultThumbnail = document.getElementById("result-thumbnail");
+    const resultDuration = document.getElementById("result-duration");
+    const resultAuthor = document.getElementById("result-author");
+    const resultTitle = document.getElementById("result-title");
+    const btnCopyCaption = document.getElementById("btn-copy-caption");
+    const copyCaptionText = document.getElementById("copy-caption-text");
+    const videoDownloadBtn = document.getElementById("video-download-btn");
+    const btnCopyVideo = document.getElementById("btn-copy-video");
+    const copyVideoIcon = document.getElementById("copy-video-icon");
+    const audioDownloadBtn = document.getElementById("audio-download-btn");
+    const btnCopyAudio = document.getElementById("btn-copy-audio");
+    const copyAudioIcon = document.getElementById("copy-audio-icon");
+    const audioContainer = document.getElementById("audio-container");
+    const historyContainer = document.getElementById("history-container");
+    const btnClearHistory = document.getElementById("btn-clear-history");
+
+    // Load History saat aplikasi dimuat
+    function init() {
+      const saved = localStorage.getItem("tikdown_history");
+      if (saved) {
+        try {
+          history = JSON.parse(saved);
+          renderHistory();
+        } catch (e) {
+          console.error("Gagal memuat riwayat:", e);
+        }
+      }
+    }
+    init();
+
+    // Event input URL
+    urlInput.addEventListener("input", () => {
+      hideError();
+      if (urlInput.value.trim()) {
+        btnClear.classList.remove("hidden");
+      } else {
+        btnClear.classList.add("hidden");
+      }
+    });
+
+    function clearInput() {
+      urlInput.value = "";
+      btnClear.classList.add("hidden");
+      hideError();
+    }
+
+    function showError(msg) {
+      errorMessage.textContent = msg;
+      errorBox.classList.remove("hidden");
+    }
+
+    function hideError() {
+      errorBox.classList.add("hidden");
+    }
+
+    async function pasteFromClipboard() {
+      try {
+        const text = await navigator.clipboard.readText();
+        if (text.includes("tiktok.com")) {
+          urlInput.value = text;
+          btnClear.classList.remove("hidden");
+          hideError();
+        } else {
+          urlInput.value = text;
+          btnClear.classList.remove("hidden");
+          showError("Teks tersalin bukan link TikTok, silakan cek kembali.");
+        }
+      } catch (e) {
+        showError("Gagal mengakses clipboard otomatis. Silakan paste secara manual.");
+      }
+    }
+
+    // Toggle FAQ
+    function toggleFaq(index) {
+      const content = document.getElementById(`faq-content-${index}`);
+      const icon = document.getElementById(`faq-icon-${index}`);
+      const isHidden = content.classList.contains("hidden");
+
+      // Tutup semua FAQ
+      for (let i = 0; i < 4; i++) {
+        document.getElementById(`faq-content-${i}`).classList.add("hidden");
+        document.getElementById(`faq-icon-${i}`).style.transform = "rotate(0deg)";
+      }
+
+      if (isHidden) {
+        content.classList.remove("hidden");
+        icon.style.transform = "rotate(180deg)";
+      }
+    }
+
+    // Fungsi Fetch Download Utama
+    async function handleDownload(targetUrl) {
+      const finalUrl = targetUrl || urlInput.value.trim();
+
+      if (!finalUrl) {
+        showError("Masukkan link TikTok terlebih dahulu!");
+        return;
+      }
+
+      if (!finalUrl.includes("tiktok.com")) {
+        showError("Masukkan link TikTok yang valid (contoh: https://vt.tiktok.com/... atau https://www.tiktok.com/@...)");
+        return;
+      }
+
+      isLoading = true;
+      hideError();
+      resultBox.classList.add("hidden");
+      loadingBox.classList.remove("hidden");
+      
+      // Update loading state tombol
+      btnSubmit.disabled = true;
+      btnSubmit.classList.add("opacity-50", "pointer-events-none");
+      btnIcon.setAttribute("data-lucide", "loader-2");
+      btnIcon.classList.add("animate-spin");
+      btnText.textContent = "PROSES PENGUNDUHAN...";
+      lucide.createIcons();
+
+      // Mulai simulasi progress bar
+      loadingStep = 0;
+      loadingStepText.textContent = loadingSteps[0];
+      loadingProgress.style.width = "25%";
+      
+      loadingInterval = setInterval(() => {
+        if (loadingStep < loadingSteps.length - 1) {
+          loadingStep++;
+          loadingStepText.textContent = loadingSteps[loadingStep];
+          loadingProgress.style.width = `${(loadingStep + 1) * 25}%`;
+        }
+      }, 1500);
+
+      try {
+        let data = null;
+        let success = false;
+
+        // Coba API 1: api.azbry.com
+        try {
+          const response = await fetch(`https://api.azbry.com/api/download/tiktok?url=${encodeURIComponent(finalUrl)}`);
+          if (response.ok) {
+            const json = await response.json();
+            if (json && json.result) {
+              const resObj = json.result;
+              data = {
+                title: resObj.title || "TikTok Video",
+                author: resObj.author || "Unknown Author",
+                thumbnail: resObj.thumbnail || "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=500",
+                duration: resObj.duration || 0,
+                videoUrl: resObj.links && resObj.links[0] ? resObj.links[0] : "",
+                audioUrl: resObj.music && resObj.music.url ? resObj.music.url : ""
+              };
+              success = true;
+            }
+          }
+        } catch (e) {
+          console.warn("API 1 failed:", e);
+        }
+
+        // Coba API 2: api.tiklydown.eu.org (Fallback)
+        if (!success) {
+          try {
+            const response = await fetch(`https://api.tiklydown.eu.org/api/download?url=${encodeURIComponent(finalUrl)}`);
+            if (response.ok) {
+              const json = await response.json();
+              if (json) {
+                data = {
+                  title: json.title || "TikTok Video",
+                  author: json.author?.nickname || json.author?.unique_id || "Unknown Author",
+                  thumbnail: json.video?.cover || json.author?.avatar || "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=500",
+                  duration: json.duration || 0,
+                  videoUrl: json.video?.noWatermark || json.video?.watermark || "",
+                  audioUrl: json.music?.play_url || ""
+                };
+                success = true;
+              }
+            }
+          } catch (e) {
+            console.warn("API 2 failed:", e);
+          }
+        }
+
+        if (success && data) {
+          showResult(data, finalUrl);
+        } else {
+          showError("Gagal mengambil data video. Server sedang sibuk atau link tidak valid.");
+        }
+      } catch (e) {
+        console.error(e);
+        showError("Terjadi kesalahan koneksi jaringan. Silakan coba kembali.");
+      } finally {
+        clearInterval(loadingInterval);
+        isLoading = false;
+        loadingBox.classList.add("hidden");
+        
+        btnSubmit.disabled = false;
+        btnSubmit.classList.remove("opacity-50", "pointer-events-none");
+        btnIcon.setAttribute("data-lucide", "download");
+        btnIcon.classList.remove("animate-spin");
+        btnText.textContent = "DOWNLOAD SEKARANG";
+        lucide.createIcons();
+      }
+    }
+
+    // Tampilkan Hasil Unduhan
+    function showResult(data, finalUrl) {
+      currentResult = data;
+      
+      resultThumbnail.src = data.thumbnail;
+      resultDuration.textContent = data.duration > 0 ? `${data.duration}s` : "";
+      resultAuthor.textContent = `@${data.author}`;
+      resultTitle.textContent = data.title || "Tidak ada deskripsi";
+
+      videoDownloadBtn.href = data.videoUrl;
+      if (data.audioUrl) {
+        audioContainer.classList.remove("hidden");
+        audioDownloadBtn.href = data.audioUrl;
+      } else {
+        audioContainer.classList.add("hidden");
+      }
+
+      setupCopyButton(btnCopyCaption, copyCaptionText, data.title, "Salin Caption");
+      setupCopyButton(btnCopyVideo, copyVideoIcon, data.videoUrl, null, true);
+      setupCopyButton(btnCopyAudio, copyAudioIcon, data.audioUrl, null, true);
+
+      resultBox.classList.remove("hidden");
+      resultBox.scrollIntoView({ behavior: "smooth" });
+
+      const newItem = {
+        id: Date.now().toString(),
+        url: finalUrl,
+        title: data.title,
+        author: data.author,
+        thumbnail: data.thumbnail,
+        duration: data.duration,
+        timestamp: new Date().toLocaleString("id-ID", {
+          day: "numeric",
+          month: "short",
+          year: "numeric"
+        }),
+        videoUrl: data.videoUrl,
+        audioUrl: data.audioUrl
+      };
+
+      // Simpan riwayat unik & simpan ke localStorage
+      history = [newItem, ...history.filter(h => h.url !== finalUrl)].slice(0, 20);
+      localStorage.setItem("tikdown_history", JSON.stringify(history));
+      renderHistory();
+    }
+
+    function setupCopyButton(btn, targetEl, textToCopy, originalText, isIcon = false) {
+      btn.onclick = () => {
+        navigator.clipboard.writeText(textToCopy);
+        if (isIcon) {
+          targetEl.setAttribute("data-lucide", "check");
+          targetEl.classList.add("text-green-400");
+          lucide.createIcons();
+          setTimeout(() => {
+            targetEl.setAttribute("data-lucide", "copy");
+            targetEl.classList.remove("text-green-400");
+            lucide.createIcons();
+          }, 2000);
+        } else {
+          targetEl.textContent = "Tersalin!";
+          btn.classList.add("text-green-400");
+          setTimeout(() => {
+            targetEl.textContent = originalText;
+            btn.classList.remove("text-green-400");
+          }, 2000);
+        }
+      };
+    }
+
+    // Render List Riwayat
+    function renderHistory() {
+      historyContainer.innerHTML = "";
+      
+      if (history.length > 0) {
+        btnClearHistory.classList.remove("hidden");
+      } else {
+        btnClearHistory.classList.add("hidden");
+        historyContainer.innerHTML = `
+          <div class="text-center py-6 text-zinc-500 text-xs flex flex-col items-center justify-center gap-2">
+            <i data-lucide="history" class="w-6 h-6 stroke-[1.5] text-zinc-600"></i>
+            <p>Belum ada riwayat unduhan.</p>
+            <p class="text-[10px] text-zinc-600">Video yang berhasil diunduh akan tersimpan di sini secara otomatis.</p>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      history.forEach(item => {
+        const itemEl = document.createElement("div");
+        itemEl.className = "flex items-center justify-between p-2 bg-zinc-950/60 hover:bg-zinc-950 border border-zinc-850 rounded-xl cursor-pointer transition-all hover:border-purple-900/40 group";
+        
+        itemEl.onclick = (e) => {
+          if (e.target.closest('.btn-delete-history')) return;
+          urlInput.value = item.url;
+          btnClear.classList.remove("hidden");
+          handleDownload(item.url);
+          document.getElementById("url-input").scrollIntoView({ behavior: "smooth" });
+        };
+
+        itemEl.innerHTML = `
+          <div class="flex items-center gap-2.5 min-w-0">
+            <div class="relative w-10 h-12 rounded-lg overflow-hidden bg-zinc-900 shrink-0 border border-zinc-800/80">
+              <img
+                src="${item.thumbnail}"
+                alt=""
+                referrerPolicy="no-referrer"
+                class="w-full h-full object-cover"
+              />
+              <div class="absolute inset-0 bg-black/25 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-white animate-spin"></i>
+              </div>
+            </div>
+            <div class="min-w-0">
+              <div class="flex items-center gap-1">
+                <span class="text-[10px] font-bold text-purple-400">@${item.author}</span>
+                <span class="text-[9px] text-zinc-500">• ${item.timestamp}</span>
+              </div>
+              <p class="text-xs font-medium text-zinc-300 truncate max-w-[240px]">
+                ${item.title || "TikTok Video"}
+              </p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-1 pl-2">
+            <button
+              class="btn-delete-history p-1.5 rounded-lg text-zinc-600 hover:text-red-400 hover:bg-red-500/5 transition-colors"
+              title="Hapus dari riwayat"
+            >
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        `;
+
+        const delBtn = itemEl.querySelector(".btn-delete-history");
+        delBtn.onclick = (e) => {
+          e.stopPropagation();
+          deleteHistoryItem(item.id);
+        };
+
+        historyContainer.appendChild(itemEl);
+      });
+
+      lucide.createIcons();
+    }
+
+    function deleteHistoryItem(id) {
+      history = history.filter(item => item.id !== id);
+      localStorage.setItem("tikdown_history", JSON.stringify(history));
+      renderHistory();
+    }
+
+    function clearAllHistory() {
+      if (confirm("Apakah Anda yakin ingin menghapus semua riwayat unduhan?")) {
+        history = [];
+        localStorage.removeItem("tikdown_history");
+        renderHistory();
+      }
+    }
+  </script>
+</body>
+</html>
